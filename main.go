@@ -31,7 +31,10 @@ func main() {
 	}
 
 	//ROUTER DEFINE
-	routes.UserRouter(&router.RouterGroup)
+	routes.UserRouter(api)
+	routes.DiaryNoteRouter(api)
+	routes.ReviewNoteRouter(api)
+	routes.DayReviewRouter(api)
 
 	port := fmt.Sprintf(":%s", os.Getenv("APP_PORT"))
 	router.Run(port)
