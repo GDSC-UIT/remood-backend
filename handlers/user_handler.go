@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	// "fmt"
 	"remood/models"
 
 	"github.com/gin-gonic/gin"
@@ -21,4 +22,16 @@ func CreateUser(ctx *gin.Context) {
 		Error:   false,
 		Data:    user,
 	})
+}
+
+func Login(ctx *gin.Context) {
+}
+
+func GetUser(ctx *gin.Context) {
+}
+
+func UpdateUser(ctx *gin.Context) {
+}
+
+func DeleteUser(ctx *gin.Context) {
 }
