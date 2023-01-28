@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"os"
 
+	"remood/pkg/auth"
 	"remood/routes"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/joho/godotenv/autoload"
 
 	"remood/pkg/database"
+	"remood/pkg/middleware"
 )
 
 func main() {
@@ -19,8 +21,12 @@ func main() {
 	defer db.Client.Connect(context.Background())
 	fmt.Println("MONGODB CONNECTED")
 
+	// GENERATE JWT SECRET KEY
+	auth.GenerateJWTKey()
+
 	//GIN DEFINE
 	router := gin.Default()
+	router.Use(middleware.CorsMiddleware)
 	api := router.Group("/api")
 	{
 		api.GET("/", func(ctx *gin.Context) {

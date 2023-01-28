@@ -13,6 +13,7 @@ func UserRouter(r *gin.RouterGroup) {
 		userRouter.POST("/login", handlers.Login)
 		userRouter.GET("/", handlers.GetUser)
 		userRouter.PUT("/", handlers.UpdateUser)
+		userRouter.PUT("/password", handlers.UpdatePassword)
 		userRouter.DELETE("/", handlers.DeleteUser)
 	}
 }
