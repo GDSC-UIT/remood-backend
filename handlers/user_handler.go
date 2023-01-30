@@ -7,6 +7,7 @@ import (
 	"remood/pkg/auth"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type RecievedUser struct {
@@ -18,6 +19,10 @@ type RecievedUser struct {
 func CreateUser(ctx *gin.Context) {
 	var receivedUser RecievedUser
 	if ctx.ShouldBindJSON(&receivedUser) != nil {
+		ctx.JSON(http.StatusBadRequest, models.Response{
+			Message: "Fail to read user information",
+			Error:   true,
+		})
 		return
 	}
 
@@ -98,10 +103,80 @@ func Login(ctx *gin.Context) {
 	})
 }
 
+func GoogleLogin(ctx *gin.Context) {
+	code := ctx.Query("code")
+
+	googleUser, err := auth.GetGoogleUserInfo(code)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": "Fail to get user info",
+			"error":   true,
+		})
+		return
+	}
+
+	var user models.User
+	err = user.GetOne("google_id", googleUser.ID)
+	if err != nil {
+		if err != mongo.ErrNoDocuments {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Fail to check if user is existing",
+				"error":   true,
+			})
+			return
+		}
+
+		err = user.Create(googleUser.Name, googleUser.Email, "")
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Fail to create user",
+				"error":   true,
+			})
+		}
+
+		user.GoogleID = googleUser.ID
+		user.Picture = googleUser.Picture
+
+		err = user.Update(user)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Fail to create user",
+				"error":   true,
+			})
+		}
+	}
+
+	claims := auth.Claims{
+		ID: user.ID,
+	}
+
+	tokenString, err := auth.GenerateTokenString(claims)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Fail to generate token string",
+			"error":   true,
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Login by google successfully!",
+		"error":   false,
+		"data": gin.H{
+			"token": tokenString,
+			"user":  user,
+		},
+	})
+}
+
 func GetUser(ctx *gin.Context) {
 	token := auth.GetTokenString(ctx)
 	claims, err := auth.ParseToken(token)
 	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, models.Response{
+			Message: "Invalid token",
+			Error:   true,
+		})
 		return
 	}
 
@@ -130,6 +205,10 @@ func UpdateUser(ctx *gin.Context) {
 	token := auth.GetTokenString(ctx)
 	claims, err := auth.ParseToken(token)
 	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, models.Response{
+			Message: "Invalid token",
+			Error:   true,
+		})
 		return
 	}
 
@@ -169,6 +248,10 @@ func UpdatePassword(ctx *gin.Context) {
 	token := auth.GetTokenString(ctx)
 	claims, err := auth.ParseToken(token)
 	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, models.Response{
+			Message: "Invalid token",
+			Error:   true,
+		})
 		return
 	}
 
@@ -222,6 +305,10 @@ func DeleteUser(ctx *gin.Context) {
 	token := auth.GetTokenString(ctx)
 	claims, err := auth.ParseToken(token)
 	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, models.Response{
+			Message: "Invalid token",
+			Error:   true,
+		})
 		return
 	}
 

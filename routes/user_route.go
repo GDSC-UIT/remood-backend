@@ -11,6 +11,7 @@ func UserRouter(r *gin.RouterGroup) {
 	{
 		userRouter.POST("/", handlers.CreateUser)
 		userRouter.POST("/login", handlers.Login)
+		userRouter.POST("/google-login", handlers.GoogleLogin)
 		userRouter.GET("/", handlers.GetUser)
 		userRouter.PUT("/", handlers.UpdateUser)
 		userRouter.PUT("/password", handlers.UpdatePassword)
