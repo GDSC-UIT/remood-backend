@@ -3,31 +3,33 @@ package models
 import (
 	"context"
 	"log"
-	"strconv"
 	"time"
 
 	"remood/pkg/const/collections"
 	"remood/pkg/database"
+	"remood/pkg/utils"
 
+	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type DiaryNote struct {
-	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id"`
-	UserID    primitive.ObjectID `json:"user_id,omitempty" bson:"user_id"`
-	Topic     string             `json:"topic"`
-	Tag       string             `json:"tag"`
-	Content   string             `json:"content"`
-	Media     []string           `json:"media"`
-	CreatedAt int64              `json:"created_at,omitempty" bson:"created_at"`
-	UpdatedAt int64              `json:"updated_at,omitempty" bson:"updated_at"`
+	BaseModel `json:",inline" bson:",inline"`
+
+	ID      primitive.ObjectID `json:"_id,omitempty" bson:"_id"`
+	UserID  primitive.ObjectID `json:"user_id,omitempty" bson:"user_id"`
+	Topic   string             `json:"topic"`
+	Tag     string             `json:"tag"`
+	Content string             `json:"content"`
+	Media   []string           `json:"media"`
 }
 
 func (d *DiaryNote) Create() error {
 	d.ID = primitive.NewObjectID()
 	d.CreatedAt = time.Now().Unix()
+	d.UpdatedAt = time.Now().Unix()
 
 	collection := database.GetMongoInstance().Db.Collection(string(collections.DiaryNote))
 
@@ -36,12 +38,18 @@ func (d *DiaryNote) Create() error {
 }
 
 func (d *DiaryNote) CreateMany(diaryNotes []DiaryNote) error {
-	// convert slice []DiaryNote to []interface{}
+	// convert slice []DiaryNote to []interface{} and add init some value
 	insert := make([]interface{}, 0)
 	for i := range diaryNotes {
 		diaryNotes[i].ID = primitive.NewObjectID()
 		diaryNotes[i].UserID = d.UserID
 		diaryNotes[i].CreatedAt = time.Now().Unix()
+		diaryNotes[i].UpdatedAt = time.Now().Unix()
+
+		// In case update many diary notes after offline time
+		if diaryNotes[i].CreatedAt == 0 {
+			diaryNotes[i].CreatedAt = time.Now().Unix()
+		}
 		insert = append(insert, diaryNotes[i])
 	}
 
@@ -66,67 +74,23 @@ func (d *DiaryNote) GetOne(ID string) error {
 	return err
 }
 
-func (d *DiaryNote) GetAll(sort_by_time string, filter map[string]interface{}) ([]DiaryNote, error) {
-
-	var diaryNotes []DiaryNote
-	opts := options.Find()
-
+func (d *DiaryNote) GetAll(sort_by_time string, filter gin.H) ([]DiaryNote, error) {
 	// Sort
-	if sort_by_time == "asc" {
-		opts = opts.SetSort(bson.M{"created_at": 1})
-	} else if sort_by_time == "desc" {
-		opts = opts.SetSort(bson.M{"created_at": -1})
-	}
+	opts := options.Find()
+	utils.SetSortForFindOption(opts, sort_by_time)
 
 	// Filter
-	var bsonFilter bson.M
-	if filter != nil {
-		bsonFilter = bson.M(filter)
+	bsonFilter, err := utils.MakeBsonFilter(filter)
+	if err != nil {
+		return nil, err
+	}
+	if bsonFilter != nil {
 		bsonFilter["user_id"] = d.UserID
-
-		// Day/Month filter
-		if bsonFilter["day"] != nil {
-			// Get filter time in int32
-			filterTimeInt32, err := strconv.Atoi(bsonFilter["day"].(string))
-			if err != nil {
-				return diaryNotes, err
-			}
-
-			// Convert filter time to date time format
-			filterTime := int64(filterTimeInt32)
-			formatTime := time.Unix(filterTime, 0)
-
-			startOfDay := time.Date(formatTime.Year(), formatTime.Month(), formatTime.Day(), 0, 0, 0, 0, time.UTC)
-			endOfDay := startOfDay.AddDate(0, 0, 1)
-
-			filter["created_at"] = bson.M{
-				"$gte": startOfDay.Unix(),
-				"$lt":  endOfDay.Unix(),
-			}
-			delete(bsonFilter, "day")
-		} else if bsonFilter["month"] != nil {
-			// Get filter time in int32
-			filterTimeInt32, err := strconv.Atoi(bsonFilter["month"].(string))
-			if err != nil {
-				return diaryNotes, err
-			}
-
-			// Convert filter time to date time format
-			filterTime := int64(filterTimeInt32)
-			formatTime := time.Unix(filterTime, 0)
-
-			startOfMonth := time.Date(formatTime.Year(), formatTime.Month(), 1, 0, 0, 0, 0, time.UTC)
-			endOfMonth := startOfMonth.AddDate(0, 1, 0)
-
-			filter["created_at"] = bson.M{
-				"$gte": startOfMonth.Unix(),
-				"$lt":  endOfMonth.Unix(),
-			}
-			delete(bsonFilter, "month")
-		}
 	}
 
 	// Find diary notes
+	var diaryNotes []DiaryNote
+
 	collection := database.GetMongoInstance().Db.Collection(string(collections.DiaryNote))
 
 	cursor, err := collection.Find(context.Background(), bsonFilter, opts)
@@ -141,9 +105,7 @@ func (d *DiaryNote) GetAll(sort_by_time string, filter map[string]interface{}) (
 	return diaryNotes, nil
 }
 
-func (d *DiaryNote) GetMany(page int64, limit int64, sort_by_time string, filter map[string]interface{}) ([]DiaryNote, error) {
-
-	var diaryNotes []DiaryNote
+func (d *DiaryNote) GetSome(page int64, limit int64, sort_by_time string, filter gin.H) ([]DiaryNote, error) {
 	opts := options.Find()
 
 	// Sort
@@ -154,57 +116,20 @@ func (d *DiaryNote) GetMany(page int64, limit int64, sort_by_time string, filter
 	}
 
 	// Pagination
-	opts = opts.SetSkip(page * limit).SetLimit(limit)
+	utils.SetSkipPage(opts, page, limit)
 
 	// Filter
-	var bsonFilter bson.M
-	if filter != nil {
-		bsonFilter = bson.M(filter)
+	bsonFilter, err := utils.MakeBsonFilter(filter)
+	if err != nil {
+		return nil, err
+	}
+	if bsonFilter != nil {
 		bsonFilter["user_id"] = d.UserID
-
-		// Day/Month filter
-		if bsonFilter["day"] != nil {
-			// Get filter time in int32
-			filterTimeInt32, err := strconv.Atoi(bsonFilter["day"].(string))
-			if err != nil {
-				return diaryNotes, err
-			}
-
-			// Convert filter time to date time format
-			filterTime := int64(filterTimeInt32)
-			formatTime := time.Unix(filterTime, 0)
-
-			startOfDay := time.Date(formatTime.Year(), formatTime.Month(), formatTime.Day(), 0, 0, 0, 0, time.UTC)
-			endOfDay := startOfDay.AddDate(0, 0, 1)
-
-			filter["created_at"] = bson.M{
-				"$gte": startOfDay.Unix(),
-				"$lt":  endOfDay.Unix(),
-			}
-			delete(bsonFilter, "day")
-		} else if bsonFilter["month"] != nil {
-			// Get filter time in int32
-			filterTimeInt32, err := strconv.Atoi(bsonFilter["month"].(string))
-			if err != nil {
-				return diaryNotes, err
-			}
-
-			// Convert filter time to date time format
-			filterTime := int64(filterTimeInt32)
-			formatTime := time.Unix(filterTime, 0)
-
-			startOfMonth := time.Date(formatTime.Year(), formatTime.Month(), 1, 0, 0, 0, 0, time.UTC)
-			endOfMonth := startOfMonth.AddDate(0, 1, 0)
-
-			filter["created_at"] = bson.M{
-				"$gte": startOfMonth.Unix(),
-				"$lt":  endOfMonth.Unix(),
-			}
-			delete(bsonFilter, "month")
-		}
 	}
 
 	// Find diary notes
+	var diaryNotes []DiaryNote
+
 	collection := database.GetMongoInstance().Db.Collection(string(collections.DiaryNote))
 
 	cursor, err := collection.Find(context.Background(), bsonFilter, opts)
@@ -273,7 +198,10 @@ func (d *DiaryNote) DeleteMany(IDs []string) error {
 			return err
 		}
 
-		filter := bson.M{"_id": objectID}
+		filter := bson.M{
+			"_id":     objectID,
+			"user_id": d.UserID,
+		}
 		_, err = collection.DeleteOne(context.Background(), filter)
 		if err != nil {
 			return err

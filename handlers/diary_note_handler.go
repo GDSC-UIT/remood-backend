@@ -123,7 +123,7 @@ func GetAllDiaryNotes(ctx *gin.Context) {
 	filter_by := ctx.Query("filter-by")
 	filter_value := ctx.Query("filter-value")
 
-	var filter map[string]interface{}
+	var filter gin.H
 	// In case having filter
 	if filter_by != "" {
 		filter_bys := strings.Split(filter_by, ",")
@@ -136,7 +136,7 @@ func GetAllDiaryNotes(ctx *gin.Context) {
 			return
 		}
 
-		filter = make(map[string]interface{})
+		filter = make(gin.H)
 		for i := range filter_bys {
 			filter[filter_bys[i]] = filter_values[i]
 		}
@@ -217,8 +217,8 @@ func GetSomeDiaryNotes(ctx *gin.Context) {
 	page := int64(pageInt32)
 	limit := int64(limitInt32)
 
-	var filter map[string]interface{}
-	// In case no filter
+	var filter gin.H
+	// In case having filter
 	if filter_by != "" {
 		filter_bys := strings.Split(filter_by, ",")
 		filter_values := strings.Split(filter_value, ",")
@@ -230,7 +230,7 @@ func GetSomeDiaryNotes(ctx *gin.Context) {
 			return
 		}
 
-		filter = make(map[string]interface{})
+		filter = make(gin.H)
 		for i := range filter_bys {
 			filter[filter_bys[i]] = filter_values[i]
 		}
@@ -238,7 +238,7 @@ func GetSomeDiaryNotes(ctx *gin.Context) {
 
 	var diaryNote models.DiaryNote
 	diaryNote.UserID = claims.ID
-	diaryNotes, err := diaryNote.GetMany(page, limit, sort_by_time, filter)
+	diaryNotes, err := diaryNote.GetSome(page, limit, sort_by_time, filter)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Fail to get diary notes",
@@ -268,9 +268,6 @@ func UpdateDiaryNote(ctx *gin.Context) {
 		return
 	}
 
-	var diaryNote models.DiaryNote
-	diaryNote.UserID = claims.ID
-
 	var newDiaryNote models.DiaryNote
 	if err := ctx.BindJSON(&newDiaryNote); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -280,14 +277,15 @@ func UpdateDiaryNote(ctx *gin.Context) {
 		return
 	}
 
-	if diaryNote.UserID != newDiaryNote.UserID {
+	if claims.ID != newDiaryNote.UserID {
 		ctx.JSON(http.StatusForbidden, gin.H{
-			"message": "Can not update other user's diary note",
+			"message": "Invalid User ID",
 			"error":   true,
 		})
 		return
 	}
 
+	var diaryNote models.DiaryNote
 	if err := diaryNote.Update(newDiaryNote); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Fail to update diary note",
@@ -339,7 +337,7 @@ func UpdateManyDiaryNotes(ctx *gin.Context) {
 	for _, d := range diaryNotes {
 		if d.UserID != claims.ID {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"message": "Invalid UserID of some diary note",
+				"message": "Invalid UserID of some diary notes",
 				"error":   true,
 			})
 			return
@@ -393,7 +391,7 @@ func DeleteDiaryNote(ctx *gin.Context) {
 	})
 }
 
-func DeleteManyDiaryNote(ctx *gin.Context) {
+func DeleteManyDiaryNotes(ctx *gin.Context) {
 	token := auth.GetTokenString(ctx)
 	claims, err := auth.ParseToken(token)
 
@@ -412,7 +410,7 @@ func DeleteManyDiaryNote(ctx *gin.Context) {
 	d.UserID = claims.ID
 	if err = d.DeleteMany(IDs); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Fail to delete some diary note",
+			"message": "Fail to delete some diary notes",
 			"error":   true,
 		})
 		return

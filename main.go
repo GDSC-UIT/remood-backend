@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"remood/pkg/auth"
+	// "remood/pkg/auth"	
 	"remood/routes"
 
 	"github.com/gin-gonic/gin"
@@ -22,7 +22,7 @@ func main() {
 	fmt.Println("MONGODB CONNECTED")
 
 	// GENERATE JWT SECRET KEY
-	auth.GenerateJWTKey()
+	// auth.GenerateJWTKey()
 
 	//GIN DEFINE
 	router := gin.Default()
@@ -43,8 +43,5 @@ func main() {
 	routes.DayReviewRouter(api)
 
 	port := fmt.Sprintf(":%s", os.Getenv("APP_PORT"))
-	router.Run(port)
+	router.Run( "localhost" + port)
 }
-
-// todo
-// 1. init jwt key
