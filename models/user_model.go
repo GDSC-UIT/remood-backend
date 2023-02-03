@@ -12,16 +12,17 @@ import (
 )
 
 type Font struct {
-	FontName    string `json:"font_name"`
-	FontSize    string `json:"font_size"`
-	LineSpacing int    `json:"line_spacing"`
-	TextOpacity int    `json:"text_opacity"`
+	FontName    string `json:"font_name" bson:"font_name"`
+	FontSize    string `json:"font_size" bson:"font_size"`
+	LineSpacing int    `json:"line_spacing" bson:"line_spacing"`
+	TextOpacity int    `json:"text_opacity" bson:"text_opacity"`
 }
 
 type AppSetting struct {
-	Font         `json:",inline"`
-	BackupData   bool  `json:"backup_data"`
-	TimeToRemind int64 `json:"time_to_remind"`
+	Font         `json:",inline" bson:",inline"`
+	BackupData   bool   `json:"backup_data" bson:"backup_data"`
+	TimeToRemind int64  `json:"time_to_remind" bson:"time_to_remind"`
+	StartOfWeek  string `json:"start_of_week" bson:"start_of_week"`
 }
 
 type User struct {
@@ -29,9 +30,9 @@ type User struct {
 
 	ID       primitive.ObjectID `json:"_id" bson:"_id"`
 	GoogleID string             `json:"google_id,omitempty" bson:"google_id,omitempty"`
-	Username string             `json:"username" bson:"username"`
+	Username string             `json:"username"`
 	Password string             `json:"password"`
-	Email    string             `json:"email" bson:"email"`
+	Email    string             `json:"email"`
 	Likings  []string           `json:"likings"`
 	Picture  string             `json:"picture"`
 
@@ -69,6 +70,7 @@ func (user *User) Create(username string, email string, password string) error {
 			},
 			BackupData:   false,
 			TimeToRemind: 0,
+			StartOfWeek:  "Monday",
 		},
 	}
 

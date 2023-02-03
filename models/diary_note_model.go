@@ -18,18 +18,22 @@ import (
 type DiaryNote struct {
 	BaseModel `json:",inline" bson:",inline"`
 
-	ID      primitive.ObjectID `json:"_id,omitempty" bson:"_id"`
-	UserID  primitive.ObjectID `json:"user_id,omitempty" bson:"user_id"`
-	Topic   string             `json:"topic"`
-	Tag     string             `json:"tag"`
-	Content string             `json:"content"`
-	Media   []string           `json:"media"`
+	ID       primitive.ObjectID `json:"_id,omitempty" bson:"_id"`
+	UserID   primitive.ObjectID `json:"user_id,omitempty" bson:"user_id"`
+	Topic    string             `json:"topic"`
+	Tag      string             `json:"tag"`
+	Content  string             `json:"content"`
+	Media    []string           `json:"media"`
+	IsPinned bool               `json:"is_pinned,omitempty" bson:"is_pinned"`
 }
 
 func (d *DiaryNote) Create() error {
 	d.ID = primitive.NewObjectID()
 	d.CreatedAt = time.Now().Unix()
 	d.UpdatedAt = time.Now().Unix()
+	d.IsPinned = false
+
+	log.Println(d)
 
 	collection := database.GetMongoInstance().Db.Collection(string(collections.DiaryNote))
 
@@ -53,8 +57,6 @@ func (d *DiaryNote) CreateMany(diaryNotes []DiaryNote) error {
 		insert = append(insert, diaryNotes[i])
 	}
 
-	log.Println(diaryNotes)
-
 	collection := database.GetMongoInstance().Db.Collection(string(collections.DiaryNote))
 
 	_, err := collection.InsertMany(context.Background(), insert)
@@ -74,18 +76,18 @@ func (d *DiaryNote) GetOne(ID string) error {
 	return err
 }
 
-func (d *DiaryNote) GetAll(sort_by_time string, filter gin.H) ([]DiaryNote, error) {
+func (d *DiaryNote) GetAll(sort_by_time string, rawFilter gin.H) ([]DiaryNote, error) {
 	// Sort
 	opts := options.Find()
 	utils.SetSortForFindOption(opts, sort_by_time)
 
 	// Filter
-	bsonFilter, err := utils.MakeBsonFilter(filter)
+	filter, err := utils.MakeFilter(rawFilter)
 	if err != nil {
 		return nil, err
 	}
-	if bsonFilter != nil {
-		bsonFilter["user_id"] = d.UserID
+	if filter != nil {
+		filter["user_id"] = d.UserID
 	}
 
 	// Find diary notes
@@ -93,7 +95,7 @@ func (d *DiaryNote) GetAll(sort_by_time string, filter gin.H) ([]DiaryNote, erro
 
 	collection := database.GetMongoInstance().Db.Collection(string(collections.DiaryNote))
 
-	cursor, err := collection.Find(context.Background(), bsonFilter, opts)
+	cursor, err := collection.Find(context.Background(), filter, opts)
 	if err != nil {
 		return diaryNotes, err
 	}
@@ -105,7 +107,7 @@ func (d *DiaryNote) GetAll(sort_by_time string, filter gin.H) ([]DiaryNote, erro
 	return diaryNotes, nil
 }
 
-func (d *DiaryNote) GetSome(page int64, limit int64, sort_by_time string, filter gin.H) ([]DiaryNote, error) {
+func (d *DiaryNote) GetSome(page int64, limit int64, sort_by_time string, rawFilter gin.H) ([]DiaryNote, error) {
 	opts := options.Find()
 
 	// Sort
@@ -119,12 +121,12 @@ func (d *DiaryNote) GetSome(page int64, limit int64, sort_by_time string, filter
 	utils.SetSkipPage(opts, page, limit)
 
 	// Filter
-	bsonFilter, err := utils.MakeBsonFilter(filter)
+	filter, err := utils.MakeFilter(rawFilter)
 	if err != nil {
 		return nil, err
 	}
-	if bsonFilter != nil {
-		bsonFilter["user_id"] = d.UserID
+	if filter != nil {
+		filter["user_id"] = d.UserID
 	}
 
 	// Find diary notes
@@ -132,7 +134,7 @@ func (d *DiaryNote) GetSome(page int64, limit int64, sort_by_time string, filter
 
 	collection := database.GetMongoInstance().Db.Collection(string(collections.DiaryNote))
 
-	cursor, err := collection.Find(context.Background(), bsonFilter, opts)
+	cursor, err := collection.Find(context.Background(), filter, opts)
 	if err != nil {
 		return diaryNotes, err
 	}
@@ -172,6 +174,31 @@ func (d *DiaryNote) UpdateMany(newDiaryNote []DiaryNote) error {
 	return nil
 }
 
+func (d *DiaryNote) Pin(ID string) error {
+	var err error
+	d.ID, err = primitive.ObjectIDFromHex(ID)
+	if err != nil {
+		return err
+	}
+
+	collection := database.GetMongoInstance().Db.Collection(string(collections.DiaryNote))
+
+	filter := bson.M{
+		"_id": d.ID,
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"is_pinned": true,
+			"updated_at": time.Now().Unix(),
+		},
+	}
+	log.Println(update)
+
+	_, err = collection.UpdateOne(context.Background(), filter, update)
+	return err
+}
+
 func (d *DiaryNote) Delete(ID string) error {
 	var err error
 	d.ID, err = primitive.ObjectIDFromHex(ID)
@@ -209,3 +236,4 @@ func (d *DiaryNote) DeleteMany(IDs []string) error {
 	}
 	return nil
 }
+

@@ -19,9 +19,9 @@ func CreateReviewNote(ctx *gin.Context) {
 	claims, err := auth.ParseToken(token)
 
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"message": "Invalid token",
-			"error":   true,
+		ctx.JSON(http.StatusUnauthorized, models.Response{
+			Message: "Invalid token",
+			Error:   true,
 		})
 		return
 	}
@@ -31,25 +31,25 @@ func CreateReviewNote(ctx *gin.Context) {
 
 	if err := ctx.BindJSON(&reviewNote); err != nil {
 		log.Println(err)
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": "Fail to read review note info",
-			"error":   true,
+		ctx.JSON(http.StatusBadRequest, models.Response{
+			Message: "Fail to read review note info",
+			Error:   true,
 		})
 		return
 	}
 
 	if err := reviewNote.Create(); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Fail to create review note",
-			"error":   true,
+		ctx.JSON(http.StatusInternalServerError, models.Response{
+			Message: "Fail to create review note",
+			Error:   true,
 		})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Create review note successfully",
-		"error":   false,
-		"data": gin.H{
+	ctx.JSON(http.StatusOK, models.Response{
+		Message: "Create review note successfully",
+		Error:   false,
+		Data: gin.H{
 			"review_note": reviewNote,
 		},
 	})
@@ -60,9 +60,9 @@ func CreateManyReviewNotes(ctx *gin.Context) {
 	claims, err := auth.ParseToken(token)
 
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"message": "Invalid token",
-			"error":   true,
+		ctx.JSON(http.StatusUnauthorized, models.Response{
+			Message: "Invalid token",
+			Error:   true,
 		})
 		return
 	}
@@ -71,9 +71,9 @@ func CreateManyReviewNotes(ctx *gin.Context) {
 	body, err := ioutil.ReadAll(ctx.Request.Body)
 	if err != nil {
 		log.Println(err)
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": "Fail to read review notes info",
-			"error":   true,
+		ctx.JSON(http.StatusBadRequest, models.Response{
+			Message: "Fail to read review notes info",
+			Error:   true,
 		})
 		return
 	}
@@ -81,9 +81,9 @@ func CreateManyReviewNotes(ctx *gin.Context) {
 	err = json.Unmarshal(body, &reviewNotes)
 	if err != nil {
 		log.Println(err)
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": "Fail to read review notes info",
-			"error":   true,
+		ctx.JSON(http.StatusBadRequest, models.Response{
+			Message: "Fail to read review notes info",
+			Error:   true,
 		})
 		return
 	}
@@ -91,17 +91,17 @@ func CreateManyReviewNotes(ctx *gin.Context) {
 	var d models.ReviewNote
 	d.UserID = claims.ID
 	if err = d.CreateMany(reviewNotes); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": "Fail to create review notes",
-			"error":   true,
+		ctx.JSON(http.StatusBadRequest, models.Response{
+			Message: "Fail to create review notes",
+			Error:   true,
 		})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Create review notes successfully",
-		"error":   false,
-		"data": gin.H{
+	ctx.JSON(http.StatusOK, models.Response{
+		Message: "Create review notes successfully",
+		Error:   false,
+		Data: gin.H{
 			"review_notes": reviewNotes,
 		},
 	})
@@ -112,9 +112,9 @@ func GetAllReviewNotes(ctx *gin.Context) {
 	claims, err := auth.ParseToken(token)
 
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"message": "Invalid token",
-			"error":   true,
+		ctx.JSON(http.StatusUnauthorized, models.Response{
+			Message: "Invalid token",
+			Error:   true,
 		})
 		return
 	}
@@ -129,9 +129,9 @@ func GetAllReviewNotes(ctx *gin.Context) {
 		filter_bys := strings.Split(filter_by, ",")
 		filter_values := strings.Split(filter_value, ",")
 		if len(filter_bys) != len(filter_values) {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"message": "Fail to read parameters",
-				"error":   true,
+			ctx.JSON(http.StatusBadRequest, models.Response{
+				Message: "Fail to read parameters",
+				Error:   true,
 			})
 			return
 		}
@@ -146,18 +146,18 @@ func GetAllReviewNotes(ctx *gin.Context) {
 	reviewNote.UserID = claims.ID
 	reviewNotes, err := reviewNote.GetAll(sort_by_time, filter)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Fail to get review notes",
-			"error":   true,
+		ctx.JSON(http.StatusInternalServerError, models.Response{
+			Message: "Fail to get review notes",
+			Error:   true,
 		})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Get all review notes successfully",
-		"error":   false,
-		"data": gin.H{
-			"review_note": reviewNotes,
+	ctx.JSON(http.StatusOK, models.Response{
+		Message: "Get all review notes successfully",
+		Error:   false,
+		Data: gin.H{
+			"review_notes": reviewNotes,
 		},
 	})
 }
@@ -167,9 +167,9 @@ func GetReviewNote(ctx *gin.Context) {
 	claims, err := auth.ParseToken(token)
 
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"message": "Invalid token",
-			"error":   true,
+		ctx.JSON(http.StatusUnauthorized, models.Response{
+			Message: "Invalid token",
+			Error:   true,
 		})
 		return
 	}
@@ -180,18 +180,18 @@ func GetReviewNote(ctx *gin.Context) {
 	reviewNote.UserID = claims.ID
 
 	if err = reviewNote.GetOne(ID); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Fail to get review note",
-			"error":   true,
+		ctx.JSON(http.StatusInternalServerError, models.Response{
+			Message: "Fail to get review note",
+			Error:   true,
 		})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Get review note successfully",
-		"error":   false,
-		"data": gin.H{
-			"review_notes": reviewNote,
+	ctx.JSON(http.StatusOK, models.Response{
+		Message: "Get review note successfully",
+		Error:   false,
+		Data: gin.H{
+			"review_note": reviewNote,
 		},
 	})
 }
@@ -201,9 +201,9 @@ func GetSomeReviewNotes(ctx *gin.Context) {
 	claims, err := auth.ParseToken(token)
 
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"message": "Invalid token",
-			"error":   true,
+		ctx.JSON(http.StatusUnauthorized, models.Response{
+			Message: "Invalid token",
+			Error:   true,
 		})
 		return
 	}
@@ -223,9 +223,9 @@ func GetSomeReviewNotes(ctx *gin.Context) {
 		filter_bys := strings.Split(filter_by, ",")
 		filter_values := strings.Split(filter_value, ",")
 		if len(filter_bys) != len(filter_values) {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"message": "Fail to read parameters",
-				"error":   true,
+			ctx.JSON(http.StatusBadRequest, models.Response{
+				Message: "Fail to read parameters",
+				Error:   true,
 			})
 			return
 		}
@@ -240,17 +240,17 @@ func GetSomeReviewNotes(ctx *gin.Context) {
 	reviewNote.UserID = claims.ID
 	reviewNotes, err := reviewNote.GetSome(page, limit, sort_by_time, filter)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Fail to get review notes",
-			"error":   true,
+		ctx.JSON(http.StatusInternalServerError, models.Response{
+			Message: "Fail to get review notes",
+			Error:   true,
 		})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Get some review notes successfully",
-		"error":   false,
-		"data": gin.H{
+	ctx.JSON(http.StatusOK, models.Response{
+		Message: "Get some review notes successfully",
+		Error:   false,
+		Data: gin.H{
 			"review_notes": reviewNotes,
 		},
 	})
@@ -261,42 +261,42 @@ func UpdateReviewNote(ctx *gin.Context) {
 	claims, err := auth.ParseToken(token)
 
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"message": "Invalid token",
-			"error":   true,
+		ctx.JSON(http.StatusUnauthorized, models.Response{
+			Message: "Invalid token",
+			Error:   true,
 		})
 		return
 	}
 
 	var newReviewNote models.ReviewNote
 	if err := ctx.BindJSON(&newReviewNote); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": "Fail to read new review note info",
-			"error":   true,
+		ctx.JSON(http.StatusBadRequest, models.Response{
+			Message: "Fail to read new review note info",
+			Error:   true,
 		})
 		return
 	}
 
 	if claims.ID != newReviewNote.UserID {
-		ctx.JSON(http.StatusForbidden, gin.H{
-			"message": "Invalid User ID",
-			"error":   true,
+		ctx.JSON(http.StatusForbidden, models.Response{
+			Message: "Invalid User ID",
+			Error:   true,
 		})
 		return
 	}
 
 	var reviewNote models.ReviewNote
 	if err := reviewNote.Update(newReviewNote); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Fail to update review note",
-			"error":   true,
+		ctx.JSON(http.StatusInternalServerError, models.Response{
+			Message: "Fail to update review note",
+			Error:   true,
 		})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Update review note successfully",
-		"error":   false,
+	ctx.JSON(http.StatusOK, models.Response{
+		Message: "Update review note successfully",
+		Error:   false,
 	})
 }
 
@@ -305,9 +305,9 @@ func UpdateManyReviewNotes(ctx *gin.Context) {
 	claims, err := auth.ParseToken(token)
 
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"message": "Invalid token",
-			"error":   true,
+		ctx.JSON(http.StatusUnauthorized, models.Response{
+			Message: "Invalid token",
+			Error:   true,
 		})
 		return
 	}
@@ -316,9 +316,9 @@ func UpdateManyReviewNotes(ctx *gin.Context) {
 	body, err := ioutil.ReadAll(ctx.Request.Body)
 	if err != nil {
 		log.Println(err)
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": "Fail to read review notes info",
-			"error":   true,
+		ctx.JSON(http.StatusBadRequest, models.Response{
+			Message: "Fail to read review notes info",
+			Error:   true,
 		})
 		return
 	}
@@ -326,9 +326,9 @@ func UpdateManyReviewNotes(ctx *gin.Context) {
 	err = json.Unmarshal(body, &reviewNotes)
 	if err != nil {
 		log.Println(err)
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": "Fail to read review notes info",
-			"error":   true,
+		ctx.JSON(http.StatusBadRequest, models.Response{
+			Message: "Fail to read review notes info",
+			Error:   true,
 		})
 		return
 	}
@@ -336,9 +336,9 @@ func UpdateManyReviewNotes(ctx *gin.Context) {
 	// Check valid UserID of each review note
 	for _, d := range reviewNotes {
 		if d.UserID != claims.ID {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"message": "Invalid UserID of some review notes",
-				"error":   true,
+			ctx.JSON(http.StatusBadRequest, models.Response{
+				Message: "Invalid UserID of some review notes",
+				Error:   true,
 			})
 			return
 		}
@@ -346,27 +346,28 @@ func UpdateManyReviewNotes(ctx *gin.Context) {
 
 	var d models.ReviewNote
 	if err = d.UpdateMany(reviewNotes); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Fail to some review notes info",
-			"error":   true,
+		ctx.JSON(http.StatusInternalServerError, models.Response{
+			Message: "Fail to some review notes info",
+			Error:   true,
 		})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Update review notes successfully",
-		"error":   false,
+	ctx.JSON(http.StatusOK, models.Response{
+		Message: "Update review notes successfully",
+		Error:   false,
 	})
 }
+
 
 func DeleteReviewNote(ctx *gin.Context) {
 	token := auth.GetTokenString(ctx)
 	claims, err := auth.ParseToken(token)
 
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"message": "Invalid token",
-			"error":   true,
+		ctx.JSON(http.StatusUnauthorized, models.Response{
+			Message: "Invalid token",
+			Error:   true,
 		})
 		return
 	}
@@ -378,16 +379,16 @@ func DeleteReviewNote(ctx *gin.Context) {
 
 	if err := reviewNote.Delete(ID); err != nil {
 		log.Println(err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Fail to delete review note",
-			"error":   true,
+		ctx.JSON(http.StatusInternalServerError, models.Response{
+			Message: "Fail to delete review note",
+			Error:   true,
 		})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Delete review note successfully",
-		"error":   false,
+	ctx.JSON(http.StatusOK, models.Response{
+		Message: "Delete review note successfully",
+		Error:   false,
 	})
 }
 
@@ -396,9 +397,9 @@ func DeleteManyReviewNotes(ctx *gin.Context) {
 	claims, err := auth.ParseToken(token)
 
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"message": "Invalid token",
-			"error":   true,
+		ctx.JSON(http.StatusUnauthorized, models.Response{
+			Message: "Invalid token",
+			Error:   true,
 		})
 		return
 	}
@@ -409,15 +410,17 @@ func DeleteManyReviewNotes(ctx *gin.Context) {
 	var d models.ReviewNote
 	d.UserID = claims.ID
 	if err = d.DeleteMany(IDs); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Fail to delete some review notes",
-			"error":   true,
+		ctx.JSON(http.StatusInternalServerError, models.Response{
+			Message: "Fail to delete some review notes",
+			Error:   true,
 		})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Delete review notes succesfully",
-		"error":   false,
+	ctx.JSON(http.StatusOK, models.Response{
+		Message: "Delete review notes succesfully",
+		Error:   false,
 	})
 }
+
+

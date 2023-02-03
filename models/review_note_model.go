@@ -16,10 +16,10 @@ import (
 )
 
 type ReviewNote struct {
-	BaseModel `json:",inline"`
+	BaseModel `json:",inline" bson:",inline"`
 
 	ID     primitive.ObjectID `json:"_id,omitempty" bson:"_id"`
-	UserID primitive.ObjectID `json:"user_id,omitempty"`
+	UserID primitive.ObjectID `json:"user_id,omitempty" bson:"user_id"`
 	Point  int                `json:"point"`
 	Topic  string             `json:"topic,omitempty" bson:",omitempty"`
 }
@@ -72,18 +72,19 @@ func (r *ReviewNote) GetOne(ID string) error {
 	return err
 }
 
-func (r *ReviewNote) GetAll(sort_by_time string, filter gin.H) ([]ReviewNote, error) {
+func (r *ReviewNote) GetAll(sort_by_time string, rawFitler gin.H) ([]ReviewNote, error) {
 	// Sort
 	opts := options.Find()
 	utils.SetSortForFindOption(opts, sort_by_time)
 
 	// Filter
-	bsonFilter, err := utils.MakeBsonFilter(filter)
+	filter, err := utils.MakeFilter(rawFitler)
+	log.Println(filter)
 	if err != nil {
 		return nil, err
 	}
-	if bsonFilter != nil {
-		bsonFilter["user_id"] = r.UserID
+	if filter != nil {
+		filter["user_id"] = r.UserID
 	}
 
 	// Find review notes
@@ -91,7 +92,7 @@ func (r *ReviewNote) GetAll(sort_by_time string, filter gin.H) ([]ReviewNote, er
 
 	collection := database.GetMongoInstance().Db.Collection(string(collections.ReviewNote))
 
-	cursor, err := collection.Find(context.Background(), bsonFilter, opts)
+	cursor, err := collection.Find(context.Background(), filter, opts)
 	if err != nil {
 		return reviewNotes, err
 	}
@@ -100,10 +101,11 @@ func (r *ReviewNote) GetAll(sort_by_time string, filter gin.H) ([]ReviewNote, er
 		return reviewNotes, err
 	}
 
+
 	return reviewNotes, nil
 }
 
-func (r *ReviewNote) GetSome(page int64, limit int64, sort_by_time string, filter gin.H) ([]ReviewNote, error) {
+func (r *ReviewNote) GetSome(page int64, limit int64, sort_by_time string, rawFilter gin.H) ([]ReviewNote, error) {
 	opts := options.Find()
 
 	// Sort
@@ -117,12 +119,12 @@ func (r *ReviewNote) GetSome(page int64, limit int64, sort_by_time string, filte
 	utils.SetSkipPage(opts, page, limit)
 
 	// Filter
-	bsonFilter, err := utils.MakeBsonFilter(filter)
+	filter, err := utils.MakeFilter(rawFilter)
 	if err != nil {
 		return nil, err
 	}
-	if bsonFilter != nil {
-		bsonFilter["user_id"] = r.UserID
+	if filter != nil {
+		filter["user_id"] = r.UserID
 	}
 
 	// Find review notes
@@ -130,7 +132,7 @@ func (r *ReviewNote) GetSome(page int64, limit int64, sort_by_time string, filte
 
 	collection := database.GetMongoInstance().Db.Collection(string(collections.ReviewNote))
 
-	cursor, err := collection.Find(context.Background(), bsonFilter, opts)
+	cursor, err := collection.Find(context.Background(), filter, opts)
 	if err != nil {
 		return reviewNotes, err
 	}
@@ -207,3 +209,4 @@ func (r *ReviewNote) DeleteMany(IDs []string) error {
 	}
 	return nil
 }
+
