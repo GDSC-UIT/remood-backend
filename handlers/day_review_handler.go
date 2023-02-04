@@ -17,19 +17,15 @@ func GetDayReview(ctx *gin.Context) {
 	claims, err := auth.ParseToken(token)
 
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, models.Response{
-			Message: "Invalid token",
-			Error:   true,
-		})
+		ctx.JSON(http.StatusUnauthorized, 
+			models.ErrorResponse("Invalid token"))
 		return
 	}
 
 	day := ctx.Query("day")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, models.Response{
-			Message: "Invalid parameter",
-			Error:   true,
-		})
+		ctx.JSON(http.StatusBadRequest, 
+			models.ErrorResponse("Invalid parameter"))
 		return
 	}
 
@@ -38,19 +34,14 @@ func GetDayReview(ctx *gin.Context) {
 
 	err = dayReview.GetOne(day)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, models.Response{
-			Message: "Fail to get day review aggregation",
-			Error: true,
-		})
+		ctx.JSON(http.StatusInternalServerError, 
+			models.ErrorResponse("Fail to get day review aggregation"))
+		return
 	}
 
-	ctx.JSON(http.StatusOK, models.Response{
-		Message: "Get day review aggregation successfully",
-		Error: false,
-		Data: gin.H{
-			"day_review": dayReview,
-		},
-	})
+	ctx.JSON(http.StatusOK, 
+		models.SuccessResponse("Get day review aggregation successfully", 
+			gin.H{"day_review": dayReview}))
 }
 
 func GetDayReviewsBetween(ctx *gin.Context) {
@@ -58,10 +49,8 @@ func GetDayReviewsBetween(ctx *gin.Context) {
 	claims, err := auth.ParseToken(token)
 
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, models.Response{
-			Message: "Invalid token",
-			Error:   true,
-		})
+		ctx.JSON(http.StatusUnauthorized, 
+			models.ErrorResponse("Invalid token"))
 		return
 	}
 
@@ -71,18 +60,14 @@ func GetDayReviewsBetween(ctx *gin.Context) {
 	var startDay, endDay int64
 	startDay, err = utils.StringToInt64(startDayString)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, models.Response{
-			Message: "Invalid parameter",
-			Error:   true,
-		})
+		ctx.JSON(http.StatusBadRequest, 
+			models.ErrorResponse("Invalid parameter"))
 		return
 	}
 	endDay, err = utils.StringToInt64(endDayString)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, models.Response{
-			Message: "Invalid parameter",
-			Error:   true,
-		})
+		ctx.JSON(http.StatusBadRequest, 
+			models.ErrorResponse("Invalid parameter"))
 		return
 	}
 
@@ -91,19 +76,14 @@ func GetDayReviewsBetween(ctx *gin.Context) {
 	dayReview.UserID = claims.ID
 	dayReviews, err := dayReview.GetBetween(startDay, endDay)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, models.Response{
-			Message: "Fail to get day review between two days",
-			Error: true,
-		})
+		ctx.JSON(http.StatusInternalServerError, 
+			models.ErrorResponse("Fail to get day review between two days"))
+		return
 	}
 
-	ctx.JSON(http.StatusOK, models.Response{
-		Message: "Get day reviews between two days successfully",
-		Error: false,
-		Data: gin.H{
-			"day_reviews": dayReviews,
-		},
-	})
+	ctx.JSON(http.StatusOK, 
+		models.SuccessResponse("Get day reviews between two days successfully",
+			gin.H{"day_reviews": dayReviews}))
 }
 
 func GetDayReviewsInMonth(ctx *gin.Context) {
@@ -111,10 +91,8 @@ func GetDayReviewsInMonth(ctx *gin.Context) {
 	claims, err := auth.ParseToken(token)
 
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, models.Response{
-			Message: "Invalid token",
-			Error:   true,
-		})
+		ctx.JSON(http.StatusUnauthorized, 
+			models.ErrorResponse("Invalid token"))
 		return
 	}
 
@@ -122,10 +100,8 @@ func GetDayReviewsInMonth(ctx *gin.Context) {
 
 	monthInt, err := strconv.Atoi(monthString)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, models.Response{
-			Message: "Invalid parameter",
-			Error:   true,
-		})
+		ctx.JSON(http.StatusBadRequest, 
+			models.ErrorResponse("Invalid parameter"))
 		return
 	}
 
@@ -135,17 +111,12 @@ func GetDayReviewsInMonth(ctx *gin.Context) {
 	dayReview.UserID = claims.ID
 	dayReviews, err := dayReview.GetInMonth(month)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, models.Response{
-			Message: "Fail to get day reviews in month",
-			Error: true,
-		})
+		ctx.JSON(http.StatusInternalServerError, 
+			models.ErrorResponse("Fail to get day reviews in month"))
+		return
 	}
 
-	ctx.JSON(http.StatusOK, models.Response{
-		Message: "Get day reviews in month successfully",
-		Error: false,
-		Data: gin.H{
-			"day_reviews": dayReviews,
-		},
-	})
+	ctx.JSON(http.StatusOK, 
+		models.SuccessResponse("Get day reviews in month successfully", 
+			gin.H{"day_reviews": dayReviews}))
 }
