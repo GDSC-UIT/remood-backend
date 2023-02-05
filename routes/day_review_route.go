@@ -9,8 +9,8 @@ import (
 func DayReviewRouter(r *gin.RouterGroup) {
 	dayReviewRouter := r.Group("day-reviews")
 	{
-		dayReviewRouter.GET("/all", handlers.GetAllDayReviews)
-		dayReviewRouter.GET("/some", handlers.GetSomeDayReview)
-		dayReviewRouter.GET("/:id", handlers.GetDayReview)
+		dayReviewRouter.GET("/day", handlers.GetDayReview)
+		dayReviewRouter.GET("/between", handlers.GetDayReviewsBetween)
+		dayReviewRouter.GET("/month", handlers.GetDayReviewsInMonth)
 	}
 }
