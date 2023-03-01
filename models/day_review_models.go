@@ -3,7 +3,7 @@ package models
 import (
 	"context"
 	"strconv"
-	// "log"
+
 	"time"
 
 	"remood/pkg/const/collections"
@@ -27,7 +27,7 @@ func (dr *DayReview) GetOne(day string) error {
 	var r ReviewNote
 	r.UserID = dr.UserID
 
-	reviewNotes, err := r.GetAll("", gin.H{"day": day})
+	reviewNotes, err := r.GetAll("asc", gin.H{"day": day})
 	if err != nil {
 		return err
 	}
@@ -39,7 +39,6 @@ func (dr *DayReview) GetOne(day string) error {
 
 	return nil
 }
-
 
 // Get day reviews between two days
 func (dr *DayReview) GetBetween(start int64, end int64) ([]DayReview, error) {
@@ -95,14 +94,10 @@ func (dr *DayReview) GetInMonth(month int64) ([]DayReview, error) {
 	return dr.GetBetween(startDay, endDay)
 }
 
-
-
-
-
 // output: the last index of review note in expected day
 // if it < startIndex, no review note in that day
 func (dr *DayReview) GetLastReviewNoteOfDayIndex(reviewNotes []ReviewNote, day time.Time, startIndex int, endIndex int) int {
-	for ;startIndex <= endIndex; startIndex++ {
+	for ; startIndex <= endIndex; startIndex++ {
 		reviewDay := utils.GetDayFromInt64(reviewNotes[startIndex].CreatedAt)
 		if reviewDay != day {
 			break
@@ -111,15 +106,23 @@ func (dr *DayReview) GetLastReviewNoteOfDayIndex(reviewNotes []ReviewNote, day t
 	return startIndex - 1
 }
 
-// Calculage aggregation by medium of all point of a day
+// Calculate aggregation by medium of all point of a day with weights
 func (dr *DayReview) AggregateReviewNoteFromSlice(reviewNotes []ReviewNote, start int, end int) float32 {
-	result := float32(0)
-	if end < start {
+
+	if len(reviewNotes) == 0 {
 		return 0
 	}
+
+	var aggregation float32 = 0
+	var sumOfWeights float32 = 0
+
 	for i := start; i <= end; i++ {
-		result += float32(reviewNotes[i].Point)
+		point := reviewNotes[i].Point
+		weight := utils.GetWeight(point)
+		sumOfWeights += weight
+		aggregation += float32(point) * weight
 	}
-	result /= float32(end - start + 1)
-	return result
+	aggregation /= sumOfWeights
+
+	return aggregation
 }

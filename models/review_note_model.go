@@ -79,13 +79,13 @@ func (r *ReviewNote) GetAll(sort_by_time string, rawFitler gin.H) ([]ReviewNote,
 
 	// Filter
 	filter, err := utils.MakeFilter(rawFitler)
-	log.Println(filter)
 	if err != nil {
 		return nil, err
 	}
 	if filter != nil {
 		filter["user_id"] = r.UserID
 	}
+	log.Println(filter)
 
 	// Find review notes
 	var reviewNotes []ReviewNote
