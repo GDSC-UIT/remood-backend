@@ -108,7 +108,6 @@ func (dr *DayReview) GetLastReviewNoteOfDayIndex(reviewNotes []ReviewNote, day t
 
 // Calculate aggregation by medium of all point of a day with weights
 func (dr *DayReview) AggregateReviewNoteFromSlice(reviewNotes []ReviewNote, start int, end int) float32 {
-
 	if len(reviewNotes) == 0 {
 		return 0
 	}

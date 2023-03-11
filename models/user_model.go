@@ -125,3 +125,4 @@ func (user *User) Delete() error {
 
 	return err
 }
+
