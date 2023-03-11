@@ -3,7 +3,7 @@ package models
 import (
 	"context"
 	"strconv"
-
+	"log"
 	"time"
 
 	"remood/pkg/const/collections"
@@ -32,10 +32,11 @@ func (dr *DayReview) GetOne(day string) error {
 		return err
 	}
 
-	point := dr.AggregateReviewNoteFromSlice(reviewNotes, 0, len(reviewNotes)-1)
-	dr.Point = point
+	dr.Point = dr.AggregateReviewNoteFromSlice(reviewNotes, 0, len(reviewNotes)-1)
 	dayInt, _ := strconv.Atoi(day)
 	dr.Date = int64(dayInt)
+
+	log.Println(dr)
 
 	return nil
 }
@@ -55,11 +56,13 @@ func (dr *DayReview) GetBetween(start int64, end int64) ([]DayReview, error) {
 		return nil, err
 	}
 
+	
 	var reviewNotes []ReviewNote
 	if err = cursor.All(context.Background(), &reviewNotes); err != nil {
 		return nil, err
 	}
-
+	
+	log.Println(reviewNotes)
 	// Aggregate review notes by day
 	result := make([]DayReview, 0)
 	startDay := utils.GetDayFromInt64(start)
