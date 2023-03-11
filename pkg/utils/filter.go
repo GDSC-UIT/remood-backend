@@ -19,7 +19,8 @@ func SetSkipPage(opts *options.FindOptions, page int64, limit int64) {
 }
 
 func MakeFilter(rawFilter gin.H) (bson.M, error) {
-	var filter bson.M
+	// var filter bson.M
+	filter := make(bson.M)
 	if rawFilter != nil {
 		filter = bson.M(rawFilter)
 
