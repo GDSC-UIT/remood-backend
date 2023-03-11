@@ -41,6 +41,7 @@ func main() {
 	routes.DiaryNoteRouter(api)
 	routes.ReviewNoteRouter(api)
 	routes.DayReviewRouter(api)
+	routes.ArticleRouter(api)
 
 	port := fmt.Sprintf(":%s", os.Getenv("APP_PORT"))
 	router.Run("localhost" + port)

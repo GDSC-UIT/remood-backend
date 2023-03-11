@@ -100,11 +100,9 @@ func (d *DiaryNote) GetAll(sort_by_time string, rawFilter gin.H) ([]DiaryNote, e
 		return diaryNotes, err
 	}
 
-	if err = cursor.All(context.Background(), &diaryNotes); err != nil {
-		return diaryNotes, err
-	}
+	err = cursor.All(context.Background(), &diaryNotes)
 
-	return diaryNotes, nil
+	return diaryNotes, err
 }
 
 func (d *DiaryNote) GetSome(page int64, limit int64, sort_by_time string, rawFilter gin.H) ([]DiaryNote, error) {
