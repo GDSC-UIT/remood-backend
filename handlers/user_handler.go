@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"log"
 
 	"remood/models"
 	"remood/pkg/auth"
@@ -34,8 +35,15 @@ func CreateUser(ctx *gin.Context) {
 
 	err = user.Create(receivedUser.Username, receivedUser.Email, hashedPassword)
 	if err != nil {
+		log.Println(err.Error())
+		var message string
+		if (err.Error() == "username is existed" || err.Error() == "email is existed") {
+			message = err.Error()
+		} else {
+			message = "Fail to create user"
+		}
 		ctx.JSON(http.StatusInternalServerError, 
-			models.ErrorResponse("Fail to create user"))
+			models.ErrorResponse(message))
 		return
 	}
 
@@ -237,6 +245,20 @@ func UpdatePassword(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, 
 		models.SuccessResponse("Update Password Successfully", nil))
+}
+
+func ResetPassword(ctx *gin.Context) {
+	email := ctx.Query("email")
+	
+	var user models.User 
+	if err := user.ResetPassword(email); err != nil {
+		ctx.JSON(http.StatusInternalServerError, 
+			models.ErrorResponse("Fail to reset password"))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, 
+		models.SuccessResponse("Reset password successfully", gin.H{}))
 }
 
 func DeleteUser(ctx *gin.Context) {

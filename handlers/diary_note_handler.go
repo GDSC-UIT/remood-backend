@@ -23,7 +23,7 @@ func CreateDiaryNote(ctx *gin.Context) {
 		return
 	}
 
-	var diaryNote models.ReviewNote
+	var diaryNote models.DiaryNote
 	diaryNote.UserID = claims.ID
 
 	if err := ctx.BindJSON(&diaryNote); err != nil {

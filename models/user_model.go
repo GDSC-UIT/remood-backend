@@ -48,6 +48,11 @@ func (user *User) Create(username string, email string, password string) error {
 		return errors.New("username is existed")
 	}
 
+	// Check if email is existed
+	if err := existedUser.GetOne("email", email); err == nil {
+		return errors.New("email is existed")
+	}
+
 	// Default value for user
 	*user = User{
 		BaseModel: BaseModel{
@@ -115,6 +120,10 @@ func (user *User) UpdatePassword(newPassword string) error {
 	_, err := collection.UpdateOne(context.Background(), filter, update)
 
 	return err
+}
+
+func (use *User) ResetPassword(email string) error {
+	return nil
 }
 
 func (user *User) Delete() error {
