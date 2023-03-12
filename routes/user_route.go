@@ -15,6 +15,7 @@ func UserRouter(r *gin.RouterGroup) {
 		userRouter.GET("/", handlers.GetUser)
 		userRouter.PUT("/", handlers.UpdateUser)
 		userRouter.PUT("/password", handlers.UpdatePassword)
+		userRouter.PUT("/password/reset", handlers.ResetPassword)
 		userRouter.DELETE("/", handlers.DeleteUser)
 	}
 }

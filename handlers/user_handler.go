@@ -59,13 +59,13 @@ func Login(ctx *gin.Context) {
 	password := ctx.Query("password")
 
 	var user models.User
-	if err := auth.ValidateUsername(&user, username); err != nil {
+	if err := user.GetOne("username", username); err != nil {
 		ctx.JSON(http.StatusUnauthorized, 
 			models.ErrorResponse("User not found"))
 		return
 	}
 
-	if err := auth.ValidatePassword(user, password); err != nil {
+	if err := auth.ValidatePassword(user.Password, password); err != nil {
 		ctx.JSON(http.StatusUnauthorized, 
 			models.ErrorResponse("Wrong password"))
 		return
@@ -222,7 +222,7 @@ func UpdatePassword(ctx *gin.Context) {
 	oldPassword := ctx.Query("old-password")
 	newPassword := ctx.Query("new-password")
 
-	err = auth.ValidatePassword(user, oldPassword)
+	err = auth.ValidatePassword(user.Password, oldPassword)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, 
 			models.ErrorResponse("Wrong Password"))

@@ -1,23 +1,23 @@
 package auth
 
 import (
-	"log"
+	// "log"
 
-	"remood/models"
+	// "remood/models"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
-func ValidateUsername(user *models.User, username string) error {
-	if err := user.GetOne("username", username); err != nil {
-		return err
-	}
-	return nil
-}
+// func ValidateUsername(user *models.User, username string) error {
+// 	if err := user.GetOne("username", username); err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
 
-func ValidatePassword(user models.User, password string) error {
-	log.Println(user, password)
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+func ValidatePassword(hashedPassword string, password string) error {
+	// log.Println(user, password)
+	if err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password)); err != nil {
 		return err
 	}
 	return nil
