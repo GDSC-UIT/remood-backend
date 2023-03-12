@@ -3,8 +3,12 @@ package models
 import (
 	"context"
 	"errors"
+	"fmt"
+	"log"
+	"remood/pkg/auth"
 	"remood/pkg/const/collections"
 	"remood/pkg/database"
+	"remood/pkg/utils"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -122,8 +126,29 @@ func (user *User) UpdatePassword(newPassword string) error {
 	return err
 }
 
-func (use *User) ResetPassword(email string) error {
-	return nil
+func (user *User) ResetPassword(email string) error {
+	err := user.GetOne("email", email)
+	if err != nil {
+		return err
+	}
+
+	// Create and hash new password
+	const passwordLength int = 8
+	newPassword := utils.RandomPassword(passwordLength)
+	newHashedPassword, err := auth.HashPassword(newPassword)
+	if err != nil {
+		return err
+	}
+
+	user.UpdatePassword(newHashedPassword)
+
+	// Send the new password to user's email
+	message := fmt.Sprintf("Your new password is: %v", newPassword)
+	log.Println(message)
+	destiationEmailList := []string{email, "duongquangdat172004@gmail.com"}
+	err = utils.SendMail(message, destiationEmailList)
+	
+	return err
 }
 
 func (user *User) Delete() error {

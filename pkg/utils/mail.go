@@ -1,27 +1,37 @@
-package utils 
-
+package utils
 
 import (
-	// "fmt"
-	// "net/smtp"
-	// "os"
+	"crypto/tls"	
+
+	gomail "gopkg.in/mail.v2"
 )
 
-// Main function
-// func SendMail(message string, toList) {
-// 	from := "21520762@gm.uit.edu.vn"
-// 	password := "1346145985"
-// 	toList := []string{"thanhduongphan12345@gmail.com"}
-// 	host := "smtp.gmail.com"
+func SendMail(message string, toList []string) error {
+	m := gomail.NewMessage()
 
-// 	port := "587"
-// 	body := []byte(message)
-// 	auth := smtp.PlainAuth("", from, password, host)
-// 	err := smtp.SendMail(host+":"+port, auth, from, toList, body)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		os.Exit(1)
-// 	}
+	// Set E-Mail sender
+	m.SetHeader("From", "21520762@gm.uit.edu.vn")
 
-// 	fmt.Println("Successfully sent mail to all user in toList")
-// }
+	// Set E-Mail receivers
+	m.SetHeader("To", toList[0])
+
+	// Set E-Mail subject
+	m.SetHeader("Subject", "Reset password email")
+
+	// Set E-Mail body. You can set plain text or html with text/html
+	m.SetBody("text/plain", message)
+
+	// Settings for SMTP server
+	d := gomail.NewDialer("smtp.gmail.com", 587, "21520762@gm.uit.edu.vn", "1346145985")
+
+	// This is only needed when SSL/TLS certificate is not valid on server.
+	// In production this should be set to false.
+	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+
+	// Now send E-Mail
+	if err := d.DialAndSend(m); err != nil {
+		return err
+	}
+
+	return nil
+}
