@@ -10,19 +10,19 @@ func SendMail(message string, toList []string) error {
 	m := gomail.NewMessage()
 
 	// Set E-Mail sender
-	m.SetHeader("From", "21520762@gm.uit.edu.vn")
+	m.SetHeader("From", "remoodgdsc@gmail.com")
 
 	// Set E-Mail receivers
 	m.SetHeader("To", toList[0])
 
 	// Set E-Mail subject
-	m.SetHeader("Subject", "Reset password email")
+	m.SetHeader("Subject", "REMOOD: Reseting password email")
 
 	// Set E-Mail body. You can set plain text or html with text/html
 	m.SetBody("text/plain", message)
 
 	// Settings for SMTP server
-	d := gomail.NewDialer("smtp.gmail.com", 587, "21520762@gm.uit.edu.vn", "1346145985")
+	d := gomail.NewDialer("smtp.gmail.com", 587, "remoodgdsc@gmail.com", "remood@123")
 
 	// This is only needed when SSL/TLS certificate is not valid on server.
 	// In production this should be set to false.

@@ -22,6 +22,7 @@ type DiaryNote struct {
 	UserID   primitive.ObjectID `json:"user_id,omitempty" bson:"user_id"`
 	Topic    string             `json:"topic"`
 	Tag      string             `json:"tag"`
+	Icon     int                `json:"icon"`
 	Content  string             `json:"content"`
 	Media    []string           `json:"media"`
 	IsPinned bool               `json:"is_pinned,omitempty" bson:"is_pinned"`
@@ -187,7 +188,7 @@ func (d *DiaryNote) Pin(ID string) error {
 
 	update := bson.M{
 		"$set": bson.M{
-			"is_pinned": true,
+			"is_pinned":  true,
 			"updated_at": time.Now().Unix(),
 		},
 	}
@@ -234,4 +235,3 @@ func (d *DiaryNote) DeleteMany(IDs []string) error {
 	}
 	return nil
 }
-
