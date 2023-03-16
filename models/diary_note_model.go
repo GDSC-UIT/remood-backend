@@ -18,14 +18,15 @@ import (
 type DiaryNote struct {
 	BaseModel `json:",inline" bson:",inline"`
 
-	ID       primitive.ObjectID `json:"_id,omitempty" bson:"_id"`
-	UserID   primitive.ObjectID `json:"user_id,omitempty" bson:"user_id"`
-	Topic    string             `json:"topic"`
-	Tag      string             `json:"tag"`
-	Icon     int                `json:"icon"`
-	Content  string             `json:"content"`
-	Media    []string           `json:"media"`
-	IsPinned bool               `json:"is_pinned,omitempty" bson:"is_pinned"`
+	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id"`
+	UserID    primitive.ObjectID `json:"user_id,omitempty" bson:"user_id"`
+	Topic     string             `json:"topic"`
+	Tag       string             `json:"tag"`
+	Icon      int                `json:"icon"`
+	IconColor int                `json:"icon_color" bson:"icon_color"`
+	Content   string             `json:"content"`
+	Media     []string           `json:"media"`
+	IsPinned  bool               `json:"is_pinned,omitempty" bson:"is_pinned"`
 }
 
 func (d *DiaryNote) Create() error {
