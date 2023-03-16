@@ -2,6 +2,7 @@ package utils
 
 import (
 	"crypto/tls"	
+	"os"
 
 	gomail "gopkg.in/mail.v2"
 )
@@ -9,8 +10,12 @@ import (
 func SendMail(message string, toList []string) error {
 	m := gomail.NewMessage()
 
+	from := "21520762@gm.uit.edu.vn"
+	fromPassword := os.Getenv("FROM_MAIL_PASSWORD")
+	
+
 	// Set E-Mail sender
-	m.SetHeader("From", "remoodgdsc@gmail.com")
+	m.SetHeader("From", from)
 
 	// Set E-Mail receivers
 	m.SetHeader("To", toList[0])
@@ -22,7 +27,7 @@ func SendMail(message string, toList []string) error {
 	m.SetBody("text/plain", message)
 
 	// Settings for SMTP server
-	d := gomail.NewDialer("smtp.gmail.com", 587, "remoodgdsc@gmail.com", "remood@123")
+	d := gomail.NewDialer("smtp.gmail.com", 587, from, fromPassword)
 
 	// This is only needed when SSL/TLS certificate is not valid on server.
 	// In production this should be set to false.
