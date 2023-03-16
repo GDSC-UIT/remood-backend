@@ -361,3 +361,20 @@ func DeleteManyDiaryNotes(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, 
 		models.SuccessResponse("Delete diary notes succesfully", nil))
 }
+
+
+func SearchDiaryNotesByTopic(ctx *gin.Context) {
+	topic := ctx.Query("topic")
+	var d models.DiaryNote 
+	
+	diaryNotes, err := d.SearchByTopic(topic)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, 
+			models.ErrorResponse("Fail to search diary notes by topic"))
+	}
+
+	ctx.JSON(http.StatusOK, 
+		models.SuccessResponse("Search diary notes by topic successfully", gin.H{
+			"dairy_notes": diaryNotes, 
+		}))
+}
