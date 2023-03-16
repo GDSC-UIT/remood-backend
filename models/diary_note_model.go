@@ -236,3 +236,27 @@ func (d *DiaryNote) DeleteMany(IDs []string) error {
 	}
 	return nil
 }
+
+func (d *DiaryNote) SearchByTopic(topic string) ([]DiaryNote, error) {
+	var diaryNotes []DiaryNote
+
+	filter := bson.M{
+		"topic": bson.M{
+			"$regex": primitive.Regex{
+				Pattern: topic,
+				Options: "i",
+			},
+		},
+	}
+
+	collection := database.GetMongoInstance().Db.Collection(string(collections.DiaryNote))
+
+	cursor, err := collection.Find(context.Background(), filter)
+	if err != nil {
+		return diaryNotes, err 
+	}
+
+	err = cursor.All(context.Background(), &diaryNotes)
+
+	return diaryNotes, err
+}

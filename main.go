@@ -20,7 +20,7 @@ func main() {
 	db := database.GetMongoInstance()
 	defer db.Client.Connect(context.Background())
 	fmt.Println("MONGODB CONNECTED")
-
+ 
 	// GENERATE JWT SECRET KEY
 	auth.GenerateJWTKey()
 

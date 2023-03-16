@@ -14,6 +14,7 @@ func DiaryNoteRouter(r *gin.RouterGroup) {
 		diaryNoteRouter.GET("/all", handlers.GetAllDiaryNotes)
 		diaryNoteRouter.GET("/some", handlers.GetSomeDiaryNotes)
 		diaryNoteRouter.GET("/", handlers.GetDiaryNote)
+		diaryNoteRouter.GET("/search", handlers.SearchDiaryNotesByTopic)
 		diaryNoteRouter.PUT("/", handlers.UpdateDiaryNote)
 		diaryNoteRouter.PUT("/many", handlers.UpdateManyDiaryNotes)
 		diaryNoteRouter.PUT("/pin", handlers.PinDiaryNote)
